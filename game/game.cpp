@@ -2,7 +2,6 @@
 #include"game.h"
 
 void InitBoard(char board[ROWS][COLS], int r, int c,char set) {
-	int i = 0;
 	for (int i = 0;i < r;i++) {
 		for (int j = 0;j < c;j++) {
 				board[i][j] = set;
@@ -45,6 +44,7 @@ void FindMine(char mine[ROWS][COLS], char show[ROWS][COLS], int r, int c) {
 		if (x >= 1 && x <= r && y >= 1 && y <= c) {
 			if (show[x][y] != '*') {
 				cout << "该位置已排查过，请重新输入！\n";
+				continue;
 			}
 			if (mine[x][y] == '1') {
 				cout << "很遗憾，你踩到雷了！\n";
@@ -70,7 +70,6 @@ void FindMine(char mine[ROWS][COLS], char show[ROWS][COLS], int r, int c) {
 		}
 		if(win== r * c - easy_count)
 			cout << "恭喜你，排雷成功！\n";
-		Displayboard(mine, r, c);
 	}
 
 }
