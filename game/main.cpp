@@ -25,6 +25,14 @@ int main(){
 		menu();
 		cout << "请选择游戏模式：\n";
 		cin >> input;
+		if (cin.fail()) {
+			if (cin.eof()) return 0;
+			cin.clear();
+			cin.ignore(numeric_limits<streamsize>::max(), '\n');
+			cout << "输入格式错误，请重新输入\n";
+			input = -1;          // 保证 do-while 继续循环，而不是退出
+			continue;
+		}
 		switch (input) {
 			case 1:
 				cout << "开始游戏" << endl;

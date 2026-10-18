@@ -41,6 +41,13 @@ void FindMine(char mine[ROWS][COLS], char show[ROWS][COLS], int r, int c) {
 	while(win<r*c- easy_count) {
 		cout << "请输入排查雷的坐标：\n";
 		cin >> x >> y;
+		if (cin.fail()) {
+			if (cin.eof()) return;                                    // 输入流结束，直接退出本局
+			cin.clear();                                             // 清除失败状态
+			cin.ignore(numeric_limits<streamsize>::max(), '\n');     // 丢弃这一行坏输入
+			cout << "输入格式错误，请输入两个数字！\n";
+			continue;
+		}
 		if (x >= 1 && x <= r && y >= 1 && y <= c) {
 			if (show[x][y] != '*') {
 				cout << "该位置已排查过，请重新输入！\n";
@@ -52,17 +59,8 @@ void FindMine(char mine[ROWS][COLS], char show[ROWS][COLS], int r, int c) {
 				return;
 			}
 			else {
-				int count = 0;
-				for (int i = x - 1;i <= x + 1;i++) {
-					for (int j = y - 1;j <= y + 1;j++) {
-						if (mine[i][j] == '1') {
-							count++;
-						}
-					}
-				}
-				show[x][y] = count+'0';
+				win += OpenBoard(mine, show, x, y);
 				Displayboard(show, r, c);
-				win++;
 			}
 		}
 		else {
@@ -73,6 +71,40 @@ void FindMine(char mine[ROWS][COLS], char show[ROWS][COLS], int r, int c) {
 	}
 
 }
+int OpenBoard(char mine[ROWS][COLS], char show[ROWS][COLS], int x, int y) {
+	// 1. 越界 → 不处理（continue 的等价物：直接返回 0）
+	if (x < 1 || x > ROW || y < 1 || y > COL) return 0;
+
+	// 2. 已翻开 → 不处理（这就是"已访问"标记）
+	if (show[x][y] != '*') return 0;
+
+	// 3. 翻开自己
+	int count = GetMineCount(mine, x, y);
+	show[x][y] = count + '0';
+	int opened = 1;
+
+	// 4. 周围无雷才向邻居扩散
+	if (count == 0) {
+		for (int i = x - 1; i <= x + 1; i++) {
+			for (int j = y - 1; j <= y + 1; j++) {
+				opened += OpenBoard(mine, show, i, j);
+			}
+		}
+	}
+	return opened;
+}
+
+int GetMineCount(char mine[ROWS][COLS], int r, int c) {
+		int count = 0;
+		for (int i = r - 1;i <= r + 1;i++) {
+			for (int j = c - 1;j <= c + 1;j++) {
+				if (mine[i][j] == '1') {
+					count++;
+				}
+			}
+		}
+		return count;
+	}
 //mine数组里的1表示有雷，0表示没有雷
 //show数组里的*表示未翻开，数字表示周围雷的数量
 //11行11列均填入数据，但仅显示9行9列，边界行列用于计算周围雷的数量
