@@ -15,7 +15,7 @@ void game() {
 	InitBoard(mine, ROWS, COLS,'0');
 	InitBoard(show, ROWS, COLS,'*');
 	Displayboard(show, ROW, COL);
-	SetMine(mine, ROW, COL);
+	// 布雷推迟到玩家第一次点击时进行，保证第一下不会踩雷
 	FindMine(mine, show, ROW, COL);
 }
 int main(){
