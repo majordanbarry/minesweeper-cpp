@@ -103,12 +103,17 @@ bool FindMine(Board& mine, Board& show, int r, int c, int mineCount) {
 	int steps = 0;            // 操作步数
 	int flags = 0;            // 已插旗数量
 	bool firstClick = true;   // 是否还没翻开过任何格子
+	time_t startTime = 0;     // 第一次翻开时开始计时
 	int total = r * c - mineCount;   // 需要翻开的安全格总数
 	string line;
 
 	while (win < total) {
+		// 计时器：还没开始点击时固定显示 0
+		long elapsed = firstClick ? 0 : (long)(time(nullptr) - startTime);
+
 		cout << "剩余雷数：" << mineCount - flags
-			<< "    已走步数：" << steps << "\n";
+			<< "    已走步数：" << steps
+			<< "    用时：" << elapsed << " 秒\n";
 		cout << "请输入（翻开：行 列    插旗：f 行 列）：\n";
 
 		// 整行读入再解析，任何非法输入都不会让 cin 卡死
@@ -170,11 +175,13 @@ bool FindMine(Board& mine, Board& show, int r, int c, int mineCount) {
 		// 第一次真正翻开时才布雷，并给点击点留出安全区
 		if (firstClick) {
 			SetMine(mine, r, c, mineCount, x, y);
+			startTime = time(nullptr);   // 计时从第一下点击开始
 			firstClick = false;
 		}
 
 		if (mine[x][y] == '1') {
-			cout << "很遗憾，你踩到雷了！\n";
+			long elapsed = (long)(time(nullptr) - startTime);
+			cout << "很遗憾，你踩到雷了！  用时 " << elapsed << " 秒\n";
 			DisplayResult(mine, show, r, c);
 			return false;
 		}
@@ -184,7 +191,8 @@ bool FindMine(Board& mine, Board& show, int r, int c, int mineCount) {
 		Displayboard(show, r, c);
 
 		if (win == total) {
-			cout << "恭喜你，排雷成功！共 " << steps << " 步\n";
+			long elapsed = (long)(time(nullptr) - startTime);
+			cout << "恭喜你，排雷成功！  用时 " << elapsed << " 秒，共 " << steps << " 步\n";
 			DisplayResult(mine, show, r, c);
 			return true;
 		}
