@@ -35,6 +35,22 @@ bool game(const GameConfig& cfg) {
 	return FindMine(mine, show, cfg.rows, cfg.cols, cfg.mines);
 }
 
+// 同一难度可以连着玩，结束后询问是否再来一局
+void playSession(const GameConfig& cfg) {
+	while (true) {
+		game(cfg);
+
+		cout << "再来一局？(y = 是，其他键 = 返回菜单)：";
+		string ans;
+		if (!getline(cin >> ws, ans)) return;          // 输入结束，直接退出
+		if (ans.empty() || (ans[0] != 'y' && ans[0] != 'Y')) {
+			cout << "\n";
+			return;
+		}
+		cout << "\n";
+	}
+}
+
 int main() {
 	int input = 0;
 	srand((unsigned int)time(NULL));
@@ -51,7 +67,7 @@ int main() {
 			continue;
 		}
 		if (input >= 1 && input <= LEVEL_COUNT) {
-			game(LEVELS[input - 1]);
+			playSession(LEVELS[input - 1]);
 		}
 		else if (input == 0) {
 			cout << "退出游戏\n";
