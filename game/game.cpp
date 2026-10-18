@@ -23,6 +23,30 @@ void Displayboard(char board[ROWS][COLS], int r, int c) {
 	}
 	cout << "\n";
 }
+// 游戏结束时的揭晓视图：雷显示 #，没翻开的空地显示 .，翻开的显示数字
+void DisplayResult(char mine[ROWS][COLS], char show[ROWS][COLS], int r, int c) {
+	cout << "  ";
+	for (int i = 1;i <= c;i++) {
+		cout << i << " ";//打印列序号
+	}
+	cout << "\n";
+	for (int i = 1;i <= r;i++) {
+		cout << i << " ";//打印行序号
+		for (int j = 1;j <= c;j++) {
+			if (mine[i][j] == '1') {
+				cout << "# ";              // 雷
+			}
+			else if (show[i][j] == '*') {
+				cout << ". ";              // 没翻开的空地
+			}
+			else {
+				cout << show[i][j] << " "; // 已翻开的格子（数字）
+			}
+		}
+		cout << "\n";
+	}
+	cout << "\n";
+}
 void SetMine(char mine[ROWS][COLS], int r, int c) {
 	int count = easy_count;
 	while (count) {
@@ -55,7 +79,7 @@ void FindMine(char mine[ROWS][COLS], char show[ROWS][COLS], int r, int c) {
 			}
 			if (mine[x][y] == '1') {
 				cout << "很遗憾，你踩到雷了！\n";
-				Displayboard(mine, r, c);
+				DisplayResult(mine, show, r, c);
 				return;
 			}
 			else {
@@ -66,8 +90,10 @@ void FindMine(char mine[ROWS][COLS], char show[ROWS][COLS], int r, int c) {
 		else {
 			cout << "输入的坐标不合法，请重新输入！\n";
 		}
-		if(win== r * c - easy_count)
+		if (win == r * c - easy_count) {
 			cout << "恭喜你，排雷成功！\n";
+			DisplayResult(mine, show, r, c);
+		}
 	}
 
 }

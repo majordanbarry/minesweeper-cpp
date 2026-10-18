@@ -10,6 +10,7 @@ using namespace std;
 #define ROWS ROW+2
 #define COLS COL+2
 void Displayboard(char board[ROWS][COLS], int row, int col);
+void DisplayResult(char mine[ROWS][COLS], char show[ROWS][COLS], int r, int c);
 void InitBoard(char board[ROWS][COLS], int r, int c, char set);
 void SetMine(char mine[ROWS][COLS], int r, int c);
 void FindMine(char mine[ROWS][COLS], char show[ROWS][COLS], int r, int c);
