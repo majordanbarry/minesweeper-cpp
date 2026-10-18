@@ -1,55 +1,54 @@
 ﻿#define _CRT_SECURE_NO_WARNINGS
 #include"game.h"
 
-void InitBoard(char board[ROWS][COLS], int r, int c,char set) {
-	for (int i = 0;i < r;i++) {
-		for (int j = 0;j < c;j++) {
-			board[i][j] = set;
-		}
-	}
+void InitBoard(Board& board, int totalR, int totalC, char set) {
+	board.assign(totalR, vector<char>(totalC, set));
 }
-void Displayboard(char board[ROWS][COLS], int r, int c) {
-	cout << "  ";
+
+void Displayboard(const Board& board, int r, int c) {
+	cout << string(CELL_W, ' ');
 	for (int i = 1;i <= c;i++) {
-		cout << i << " ";//打印列序号
+		cout << setw(CELL_W) << i;//打印列序号
 	}
 	cout << "\n";
 	for (int i = 1;i <= r;i++) {
-		cout << i << " ";//打印行序号
+		cout << setw(CELL_W) << i;//打印行序号
 		for (int j = 1;j <= c;j++) {
-			cout<<board[i][j]<<" ";
+			cout << setw(CELL_W) << board[i][j];
 		}
-		cout<<"\n";
+		cout << "\n";
 	}
 	cout << "\n";
 }
+
 // 游戏结束时的揭晓视图：雷显示 #，没翻开的空地显示 .，翻开的显示数字
-void DisplayResult(char mine[ROWS][COLS], char show[ROWS][COLS], int r, int c) {
-	cout << "  ";
+void DisplayResult(const Board& mine, const Board& show, int r, int c) {
+	cout << string(CELL_W, ' ');
 	for (int i = 1;i <= c;i++) {
-		cout << i << " ";//打印列序号
+		cout << setw(CELL_W) << i;//打印列序号
 	}
 	cout << "\n";
 	for (int i = 1;i <= r;i++) {
-		cout << i << " ";//打印行序号
+		cout << setw(CELL_W) << i;//打印行序号
 		for (int j = 1;j <= c;j++) {
 			if (mine[i][j] == '1') {
-				cout << "# ";              // 雷
+				cout << setw(CELL_W) << "#";   // 雷
 			}
 			else if (show[i][j] == '*') {
-				cout << ". ";              // 没翻开的空地
+				cout << setw(CELL_W) << ".";   // 没翻开的空地
 			}
 			else {
-				cout << show[i][j] << " "; // 已翻开的格子（数字）
+				cout << setw(CELL_W) << show[i][j]; // 已翻开的格子（数字）
 			}
 		}
 		cout << "\n";
 	}
 	cout << "\n";
 }
+
 // 布雷：避开首次点击点周围的 3x3 区域，保证第一下不会踩雷
-void SetMine(char mine[ROWS][COLS], int r, int c, int safeX, int safeY) {
-	int count = easy_count;
+void SetMine(Board& mine, int r, int c, int mineCount, int safeX, int safeY) {
+	int count = mineCount;
 	while (count > 0) {
 		int x = rand() % r + 1;
 		int y = rand() % c + 1;
@@ -61,22 +60,61 @@ void SetMine(char mine[ROWS][COLS], int r, int c, int safeX, int safeY) {
 		}
 	}
 }
+
+int GetMineCount(const Board& mine, int r, int c) {
+	int count = 0;
+	for (int i = r - 1;i <= r + 1;i++) {
+		for (int j = c - 1;j <= c + 1;j++) {
+			if (mine[i][j] == '1') {
+				count++;
+			}
+		}
+	}
+	return count;
+}
+
+int OpenBoard(const Board& mine, Board& show, int r, int c, int x, int y) {
+	// 1. 越界 → 不处理（continue 的等价物：直接返回 0）
+	if (x < 1 || x > r || y < 1 || y > c) return 0;
+
+	// 2. 已翻开 → 不处理（这就是"已访问"标记）
+	if (show[x][y] != '*') return 0;
+
+	// 3. 翻开自己
+	int count = GetMineCount(mine, x, y);
+	show[x][y] = (char)(count + '0');
+	int opened = 1;
+
+	// 4. 周围无雷才向邻居扩散
+	if (count == 0) {
+		for (int i = x - 1; i <= x + 1; i++) {
+			for (int j = y - 1; j <= y + 1; j++) {
+				opened += OpenBoard(mine, show, r, c, i, j);
+			}
+		}
+	}
+	return opened;
+}
+
 // 排雷主循环：翻开写 "行 列"，插旗写 "f 行 列"
-void FindMine(char mine[ROWS][COLS], char show[ROWS][COLS], int r, int c) {
+// 返回值：true = 排雷成功，false = 踩雷或中途退出
+bool FindMine(Board& mine, Board& show, int r, int c, int mineCount) {
 	int win = 0;              // 已翻开的格子数
 	int steps = 0;            // 操作步数
 	int flags = 0;            // 已插旗数量
 	bool firstClick = true;   // 是否还没翻开过任何格子
+	int total = r * c - mineCount;   // 需要翻开的安全格总数
 	string line;
 
-	while (win < r * c - easy_count) {
-		cout << "剩余雷数：" << easy_count - flags << "    已走步数：" << steps << "\n";
+	while (win < total) {
+		cout << "剩余雷数：" << mineCount - flags
+			<< "    已走步数：" << steps << "\n";
 		cout << "请输入（翻开：行 列    插旗：f 行 列）：\n";
 
 		// 整行读入再解析，任何非法输入都不会让 cin 卡死
 		if (!getline(cin >> ws, line)) {
 			cout << "\n输入结束，退出本局。\n";
-			return;
+			return false;
 		}
 		istringstream iss(line);
 		string cmd;
@@ -131,61 +169,30 @@ void FindMine(char mine[ROWS][COLS], char show[ROWS][COLS], int r, int c) {
 
 		// 第一次真正翻开时才布雷，并给点击点留出安全区
 		if (firstClick) {
-			SetMine(mine, r, c, x, y);
+			SetMine(mine, r, c, mineCount, x, y);
 			firstClick = false;
 		}
 
 		if (mine[x][y] == '1') {
 			cout << "很遗憾，你踩到雷了！\n";
 			DisplayResult(mine, show, r, c);
-			return;
+			return false;
 		}
 
-		win += OpenBoard(mine, show, x, y);
+		win += OpenBoard(mine, show, r, c, x, y);
 		steps++;
 		Displayboard(show, r, c);
 
-		if (win == r * c - easy_count) {
-			cout << "恭喜你，排雷成功！\n";
+		if (win == total) {
+			cout << "恭喜你，排雷成功！共 " << steps << " 步\n";
 			DisplayResult(mine, show, r, c);
+			return true;
 		}
 	}
-}
-int OpenBoard(char mine[ROWS][COLS], char show[ROWS][COLS], int x, int y) {
-	// 1. 越界 → 不处理（continue 的等价物：直接返回 0）
-	if (x < 1 || x > ROW || y < 1 || y > COL) return 0;
-
-	// 2. 已翻开 → 不处理（这就是"已访问"标记）
-	if (show[x][y] != '*') return 0;
-
-	// 3. 翻开自己
-	int count = GetMineCount(mine, x, y);
-	show[x][y] = count + '0';
-	int opened = 1;
-
-	// 4. 周围无雷才向邻居扩散
-	if (count == 0) {
-		for (int i = x - 1; i <= x + 1; i++) {
-			for (int j = y - 1; j <= y + 1; j++) {
-				opened += OpenBoard(mine, show, i, j);
-			}
-		}
-	}
-	return opened;
+	return true;
 }
 
-int GetMineCount(char mine[ROWS][COLS], int r, int c) {
-	int count = 0;
-	for (int i = r - 1;i <= r + 1;i++) {
-		for (int j = c - 1;j <= c + 1;j++) {
-			if (mine[i][j] == '1') {
-				count++;
-			}
-		}
-	}
-	return count;
-}
 //mine数组里的1表示有雷，0表示没有雷
 //show数组里的*表示未翻开，F表示插旗，数字表示周围雷的数量
-//11行11列均填入数据，但仅显示9行9列，边界行列用于计算周围雷的数量
+//(r+2)行(c+2)列均填入数据，但仅显示r行c列，边界行列用于计算周围雷的数量
 //初始化-首次点击布雷-排查雷
