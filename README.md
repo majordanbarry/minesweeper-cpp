@@ -72,6 +72,10 @@ game/
 - **输入容错**：整行读入后交给 `istringstream` 解析，配合 `getline` 的返回值判断流状态，任何非法输入都不会让 `cin` 进入失败态死循环
 - **模块化拆分**：声明与定义分离（`game.h` / `game.cpp`），程序入口单独置于 `main.cpp`
 
+## 相关
+
+- [coding-journey](https://github.com/majordanbarry/coding-journey)：写这个项目之前的学习练习，按知识点编号整理
+
 ## 许可
 
 [MIT](LICENSE.txt)
